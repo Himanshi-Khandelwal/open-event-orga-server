@@ -1,10 +1,16 @@
+from StringIO import StringIO
+from flask import make_response
+
 import pycountry
+import re
 from datetime import datetime
 from flask import Blueprint
 from flask import abort, jsonify
 from flask import redirect, flash
 from flask import request, render_template
 from flask import url_for
+
+from xhtml2pdf import pisa
 
 from app import get_settings
 from app.helpers.cache import cache
@@ -15,6 +21,12 @@ from app.helpers.ticketing import TicketingManager
 from app.models.ticket import Ticket
 
 event_ticket_sales = Blueprint('event_ticket_sales', __name__, url_prefix='/events/<int:event_id>/tickets')
+
+
+def create_pdf(pdf_data):
+    pdf = StringIO()
+    pisa.CreatePDF(StringIO(pdf_data.encode('utf-8')), pdf)
+    return pdf
 
 
 @cache.memoize(50)
@@ -134,7 +146,7 @@ def display_ticket_stats(event_id):
 
 
 @event_ticket_sales.route('/orders/')
-def display_orders(event_id):
+def display_orders(event_id, pdf=None):
     from_date = request.args.get('from_date')
     to_date = request.args.get('to_date')
     discount_code = request.args.get('discount_code')
@@ -158,12 +170,15 @@ def display_orders(event_id):
     else:
         orders = TicketingManager.get_orders(event_id)
     event = DataGetter.get_event(event_id)
-    return render_template('gentelella/users/events/tickets/orders.html', event=event, event_id=event_id,
-                           orders=orders, from_date=from_date, to_date=to_date, discount_code=discount_code)
+    if pdf is not None:
+        return (event, event_id, orders, discount_code)
+    else:
+        return render_template('gentelella/users/events/tickets/orders.html', event=event, event_id=event_id,
+                               orders=orders, from_date=from_date, to_date=to_date, discount_code=discount_code)
 
 
 @event_ticket_sales.route('/attendees/')
-def display_attendees(event_id):
+def display_attendees(event_id, pdf=None):
     event = DataGetter.get_event(event_id)
     from_date = request.args.get('from_date')
     to_date = request.args.get('to_date')
@@ -198,10 +213,13 @@ def display_attendees(event_id):
                 'completed_at': order.completed_at,
                 'created_at': order.created_at,
                 'ticket_name': holder.ticket.name,
+                'ticket_type': holder.ticket.type,
                 'firstname': holder.firstname,
                 'lastname': holder.lastname,
                 'email': holder.email,
-                'ticket_price': holder.ticket.price
+                'country': holder.country,
+                'ticket_price': holder.ticket.price,
+                'discount': discount
             }
 
             if order.status == 'completed':
@@ -243,9 +261,147 @@ def display_attendees(event_id):
 
             holders.append(order_holder)
 
-    return render_template('gentelella/users/events/tickets/attendees.html', event=event,
-                           event_id=event_id, holders=holders, from_date=from_date, to_date=to_date,
-                           ticket_names=ticket_names, selected_ticket=selected_ticket)
+    if pdf is not None:
+        return (event, event_id, holders, orders, ticket_names, selected_ticket)
+    else:
+        return render_template('gentelella/users/events/tickets/attendees.html', event=event,
+                               event_id=event_id, holders=holders, from_date=from_date, to_date=to_date,
+                               ticket_names=ticket_names, selected_ticket=selected_ticket)
+
+
+@event_ticket_sales.route('/attendees/pdf')
+def download_as_pdf(event_id):
+    (event, event_id, holders, orders, ticket_names, selected_ticket) = display_attendees(event_id, pdf='print_pdf')
+    pdf = create_pdf(render_template('gentelella/users/events/tickets/download_attendees.html', event=event,
+                                     event_id=event_id, holders=holders, ticket_names=ticket_names,
+                                     selected_ticket=selected_ticket))
+    response = make_response(pdf.getvalue())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = \
+        'inline; filename=%s.csv' % (re.sub(r"[^\w\s]", '', event.name).replace(" ", "_"))
+    return response
+
+
+@event_ticket_sales.route('/attendees/csv')
+def download_as_csv(event_id):
+    (event, event_id, holders, orders, ticket_names, selected_ticket) = display_attendees(event_id, pdf='print_csv')
+    value = 'Order#,Order Date, Status, First Name, Last Name, Email, Country,' \
+            'Payment Type, Ticket Name, Ticket Price, Ticket Type \n'
+
+    for holder in holders:
+        if holder['status'] != "deleted":
+            if 'order_invoice' in holder:
+                value += holder['order_invoice']
+            value += ','
+            if 'created_at' in holder:
+                value += str(holder['created_at'])
+            value += ','
+            if 'status' in holder:
+                value += holder['status']
+            value += ','
+            if 'firstname' in holder:
+                value += holder['firstname']
+            value += ','
+            if 'lastname' in holder:
+                value += holder['lastname']
+            value += ','
+            if 'email' in holder:
+                value += holder['email']
+            value += ','
+            if 'country' in holder:
+                value += str(holder['country'])
+            value += ','
+            if 'paid_via' in holder and holder['paid_via']:
+                value += holder['paid_via']
+            value += ','
+            if 'ticket_name' in holder:
+                value += str(holder['ticket_name'])
+            value += ','
+            if 'ticket_price' in holder:
+                value += str(holder['ticket_price'])
+            value += ','
+            if 'ticket_type' in holder:
+                value += str(holder['ticket_type'])
+            value += ','
+            value += '\n'
+
+    response = make_response(value)
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = \
+        'inline; filename=%s.csv' % (re.sub(r"[^\w\s]", '', event.name).replace(" ", "_"))
+
+    return response
+
+
+@event_ticket_sales.route('/orders/pdf')
+def download_orders_as_pdf(event_id):
+    (event, event_id, orders, discount_code) = display_orders(event_id, pdf='print_pdf')
+    pdf = create_pdf(render_template('gentelella/users/events/tickets/download_orders.html', event=event, event_id=event_id,
+                                     orders=orders, discount_code=discount_code))
+    response = make_response(pdf.getvalue())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = \
+        'inline; filename=%s.csv' % (re.sub(r"[^\w\s]", '', event.name).replace(" ", "_"))
+    return response
+
+
+@event_ticket_sales.route('/orders/csv')
+def download_orders_as_csv(event_id):
+    (event, event_id, holders, orders, ticket_names, selected_ticket) = display_attendees(event_id, pdf='print_csv')
+    value = 'Order#,Order Date, Status, Payment Type, Quantity,Total Amount,Discount Code,' \
+            'First Name, Last Name, Email \n'
+
+    for order in orders:
+        if order.status != "deleted":
+            # To avoid KeyError exception
+            try:
+                value += str(order.get_invoice_number()) + ','
+            except:
+                value += ','
+            try:
+                value += str(order.created_at) + ','
+            except:
+                value += ','
+            try:
+                value += order.status + ','
+            except:
+                value += ','
+            try:
+                value += order.paid_via + ','
+            except:
+                value += ','
+            try:
+                value += str(order.get_tickets_count()) + ','
+            except:
+                value += ','
+            try:
+                value += str(order.amount) + ','
+            except:
+                value += ','
+            try:
+                value += order.discount_code.code + ','
+            except:
+                value += ','
+            try:
+                value += order.user.user_detail.firstname + ','
+            except:
+                value += ','
+            try:
+                value += order.user.user_detail.lastname + ','
+            except:
+                value += ','
+            try:
+                value += order.user.email + ','
+            except:
+                value += ','
+            value += '\n'
+
+    response = make_response(value)
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = \
+        'inline; filename=%s.csv' % (re.sub(r"[^\w\s]", '', event.name).replace(" ", "_"))
+
+    return response
 
 
 @event_ticket_sales.route('/add-order/', methods=('GET', 'POST'))

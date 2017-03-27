@@ -417,8 +417,7 @@ class DataGetter(object):
             events = Event.query.filter(Event.state == 'Published')
         else:
             events = Event.query.filter(Event.state == 'Published').filter(Event.privacy != 'private')
-        events = events.filter(Event.start_time >= datetime.datetime.now()).filter(
-            Event.end_time >= datetime.datetime.now()).filter(Event.in_trash == 'False')
+        events = events.filter(Event.end_time >= datetime.datetime.now()).filter(Event.in_trash == 'False')
         return events
 
     @staticmethod
@@ -510,6 +509,11 @@ class DataGetter(object):
     def get_speaker_by_email(email_id):
         """Get speaker by id"""
         return Speaker.query.filter_by(email=email_id)
+
+    @staticmethod
+    def get_speaker_by_email_event(email_id, event_id):
+        """Get speaker by id"""
+        return Speaker.query.filter_by(email=email_id).filter_by(event_id=event_id)
 
     @staticmethod
     def get_session_types_by_event_id(event_id):
