@@ -32,8 +32,18 @@
         {% endif %}
 
         <br>
-        <button type="submit" class="btn btn-success" name="state" value="save">{{ _("Save Session") }}</button>
-        {% if session.state == "draft" %}
+        {% if from_path == 'cfs' and user_speaker[0]['name'] %}
+            <button type="submit" class="btn btn-basic" name="state" value="draft">{{ _("Save as Draft") }}</button>
+            <button type="submit" class="btn btn-primary" name="state" value="pending">{{ _("Submit Session") }}</button>
+        {% elif from_path == 'cfs' or speaker.name == "" %}
+            <button type="submit" class="btn btn-basic" name="state" value="draft">{{ _("Save as Draft") }}</button>
+        {% elif from_path !='cfs' and session.state == "draft" %}
+            <button type="submit" class="btn btn-basic" name="state" value="draft">{{ _("Save as Draft") }}</button>
+            <button type="submit" class="btn btn-primary" name="state" value="pending">{{ _("Submit Session") }}</button>
+        {% elif from_path != 'cfs' and session.state %}
+            <button type="submit" class="btn btn-success" name="state" value="save">{{ _("Save Session") }}</button>                
+        {% else %}
+            <button type="submit" class="btn btn-basic" name="state" value="draft">{{ _("Save as Draft") }}</button>
             <button type="submit" class="btn btn-primary" name="state" value="pending">{{ _("Submit Session") }}</button>
         {% endif %}
     </div>
