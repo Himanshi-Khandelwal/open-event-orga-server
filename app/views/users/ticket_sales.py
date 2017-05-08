@@ -226,7 +226,7 @@ def display_attendees(event_id, pdf=None):
                 'discount': discount
             }
 
-            if order.status == 'completed' or order.status == 'placed':
+            if order.status == 'completed':
                 order_holder['order_url'] = url_for('ticketing.view_order_after_payment',
                                                     order_identifier=order.identifier)
             else:
@@ -253,7 +253,7 @@ def display_attendees(event_id, pdf=None):
                 'created_at': order.created_at
             }
 
-            if order.status == 'completed' or order.status == 'placed':
+            if order.status == 'completed':
                 order_holder['order_url'] = url_for('ticketing.view_order_after_payment',
                                                     order_identifier=order.identifier)
             else:
@@ -276,7 +276,7 @@ def display_attendees(event_id, pdf=None):
 @event_ticket_sales.route('/attendees/pdf')
 @can_access
 def download_as_pdf(event_id):
-    (event, event_id, holders, orders, ticket_names, selected_ticket) = display_attendees(event_id=event_id, pdf='print_pdf')
+    (event, event_id, holders, orders, ticket_names, selected_ticket) = display_attendees(event_id, pdf='print_pdf')
     pdf = create_pdf(render_template('gentelella/users/events/tickets/download_attendees.html', event=event,
                                      event_id=event_id, holders=holders, ticket_names=ticket_names,
                                      selected_ticket=selected_ticket))
@@ -290,7 +290,7 @@ def download_as_pdf(event_id):
 @event_ticket_sales.route('/attendees/csv')
 @can_access
 def download_as_csv(event_id):
-    (event, event_id, holders, orders, ticket_names, selected_ticket) = display_attendees(event_id=event_id, pdf='print_csv')
+    (event, event_id, holders, orders, ticket_names, selected_ticket) = display_attendees(event_id, pdf='print_csv')
     value = 'Order#,Order Date, Status, First Name, Last Name, Email, Country,' \
             'Payment Type, Ticket Name, Ticket Price, Ticket Type \n'
 
@@ -342,7 +342,7 @@ def download_as_csv(event_id):
 @event_ticket_sales.route('/orders/pdf')
 @can_access
 def download_orders_as_pdf(event_id):
-    (event, event_id, orders, discount_code) = display_orders(event_id=event_id, pdf='print_pdf')
+    (event, event_id, orders, discount_code) = display_orders(event_id, pdf='print_pdf')
     pdf = create_pdf(render_template('gentelella/users/events/tickets/download_orders.html', event=event, event_id=event_id,
                                      orders=orders, discount_code=discount_code))
     response = make_response(pdf.getvalue())
@@ -355,7 +355,7 @@ def download_orders_as_pdf(event_id):
 @event_ticket_sales.route('/orders/csv')
 @can_access
 def download_orders_as_csv(event_id):
-    (event, event_id, holders, orders, ticket_names, selected_ticket) = display_attendees(event_id=event_id, pdf='print_csv')
+    (event, event_id, holders, orders, ticket_names, selected_ticket) = display_attendees(event_id, pdf='print_csv')
     value = 'Order#,Order Date, Status, Payment Type, Quantity,Total Amount,Discount Code,' \
             'First Name, Last Name, Email \n'
 
@@ -571,7 +571,7 @@ def access_codes_edit(event_id, access_code_id=None):
         TicketingManager.create_edit_access_code(request.form, event_id, access_code_id)
         flash("The access code has been edited.", "success")
         return redirect(url_for('.access_codes_view', event_id=event_id))
-    return access_codes_create(event_id=event_id, access_code_id=access_code_id)
+    return access_codes_create(event_id, access_code_id)
 
 
 @event_ticket_sales.route('/access/<int:access_code_id>/toggle/')

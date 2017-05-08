@@ -23,24 +23,24 @@ class TestAdminTrash(OpenEventTestCase):
             event = Event(name="event1",
                           start_time=datetime(2003, 8, 4, 12, 30, 45),
                           end_time=datetime(2003, 9, 4, 12, 30, 45),
-                          deleted_at=None)
+                          in_trash=False)
 
             save_to_db(event, "Event saved")
             DataManager.trash_event(1)
             url = url_for('events.index_view')
             rv = self.app.get(url)
             self.assertFalse('event1' in rv.data)
-            self.assertTrue(event.deleted_at is not None)
+            self.assertEqual(event.in_trash, True)
 
     def test_add_user_to_trash(self):
         with app.test_request_context():
             user = User(password="test",
                         email="email@gmail.com",
-                        deleted_at=None)
+                        in_trash=False)
 
             save_to_db(user, "User saved")
             trash_user(1)
-            self.assertTrue(user.deleted_at is not None)
+            self.assertEqual(user.in_trash, True)
 
     def test_add_session_to_trash(self):
         with app.test_request_context():
@@ -51,7 +51,7 @@ class TestAdminTrash(OpenEventTestCase):
                               end_time=datetime(2003, 8, 4, 12, 30, 45),
                               event_id=1,
                               state='pending',
-                              deleted_at=None)
+                              in_trash=False)
 
             save_to_db(event, "Event saved")
             save_to_db(session, "Session saved")
@@ -59,7 +59,7 @@ class TestAdminTrash(OpenEventTestCase):
             url = url_for('event_sessions.index_view', event_id=1)
             rv = self.app.get(url)
             self.assertFalse('Session 1' in rv.data)
-            self.assertTrue(session.deleted_at is not None)
+            self.assertEqual(session.in_trash, True)
 
 
 if __name__ == '__main__':

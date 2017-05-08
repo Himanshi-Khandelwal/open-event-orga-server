@@ -75,13 +75,13 @@ class ProductionConfig(Config):
 
     MINIFY_PAGE = True
     PRODUCTION = True
-    INTEGRATE_SOCKETIO = False
+    INTEGRATE_SOCKETIO = True
     CACHING = True
 
-    # if force on
+    # if force off
     socketio_integration = os.environ.get('INTEGRATE_SOCKETIO')
-    if socketio_integration == 'true':
-        INTEGRATE_SOCKETIO = True
+    if socketio_integration == 'false':
+        INTEGRATE_SOCKETIO = False
 
 
 class StagingConfig(ProductionConfig):

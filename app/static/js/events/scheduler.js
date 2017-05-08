@@ -419,7 +419,6 @@ function updateColor($element, track) {
             if(!_.isNull(track.color) && !_.isEmpty(track.color)) {
                 $element.css("background-color", track.color.trim());
                 $element.css("background-color", track.color.trim());
-                $element.css("color", track.font_color.trim());
                 return;
             }
         }
@@ -591,22 +590,22 @@ function addInfoBox($sessionElement, session) {
     }
     var content = "";
     if(!_.isNull(session.short_abstract)) {
-        content +=  "<strong>About the session:</strong> " + session.short_abstract + "<br>";
+        content +=  "<strong>About the session:</strong> " + session.short_abstract + "<br><br>";
     } else {
         session.long_abstract  = session.long_abstract.substr(0, 100);
-        content +=  "<strong>About the session:</strong> " + session.long_abstract + "<br>";
+        content +=  "<strong>About the session:</strong> " + session.long_abstract + "<br><br>";
     }
     _.forEach(session.speakers, function(speaker, index) {
         if(session.speakers.length === 1) {
-            content += "<strong>Speaker: </strong> " + speaker.name + "<br>";
+            content += "<strong>Speaker: </strong> " + speaker.name + "<br><br>";
         } else {
-            content += "<strong>Speaker </strong> " + (parseInt(index, 10)+1) + "<strong> :</strong> " + speaker.name + "<br>";
+            content += "<strong>Speaker </strong> " + (parseInt(index, 10)+1) + "<strong> :</strong> " + speaker.name + "<br><br>";
         }
         if(speaker.short_biography) {
-            content += "<strong>About the Speaker: </strong><br>" + speaker.short_biography + "<br>";
+            content += "<strong>About the Speaker: </strong><br>" + speaker.short_biography + "<br><br>";
         } else {
             session.speakers.long_biography = speaker.long_biography.substr(1, 100);
-            content += "<strong>About the Speaker: </strong><br>" + speaker.long_biography + "<br>";
+            content += "<strong>About the Speaker: </strong><br>" + speaker.long_biography + "<br><br>";
         }
     });
     if(!_.isNull(session.start_time)) {
@@ -621,14 +620,13 @@ function addInfoBox($sessionElement, session) {
     if(!_.isNull(session.microlocation)) {
         content += "<strong>Room:</strong> " + session.microlocation.name + "<br>";
     }
-
     $sessionElement.popover({
         trigger: 'manual',
         placement: 'bottom',
         html: true,
         title: session.title,
         content: content,
-        container: '.scheduler-body'
+        container: 'body'
     });
 }
 
@@ -988,7 +986,6 @@ function loadMicrolocationsToTimeline(day) {
             var $trackElement = $(mobileMicrolocationTemplate);
             $trackElement.find('.name').text(track.name);
             $trackElement.attr("data-track-id", track.id);
-            $trackElement.attr("id", "track-id-"+track.id);
             $tracksTimeline.append($trackElement);
         }
     });
@@ -1068,8 +1065,8 @@ function initializeTimeline(eventId) {
                 $('.remove-btn').hide();
             }
             $(".rooms-view").addClass('active');
-            var max_width = $("#timeline").width() - $(".timeunits.x1").width();
-            $('.microlocation-container').css("max-width", max_width + "px");
+
+            $('.microlocation-container').css("width", $(".microlocations.x1").width() + "px");
 
             $(document).trigger({
                 type: "scheduling:recount",
@@ -1093,49 +1090,6 @@ $(".timeline").scroll(function () {
     var elementTop = el.position().top;
     var pos = cont.scrollTop() + elementTop;
     cont.find(".microlocation-header").css("top", pos + "px");
-});
-
-/**
- * Handle track-view and session-view sessions search
- */
-$("#sessions-public-search").valueChange(function (value) {
-    var trackFiltered = [];
-    var sessionFiltered = [];
-    var trackSessionRows = $("#tracks-timeline .mobile-sessions-holder .event").parent().parent();
-    var sessionSessionRows = $('#session-view-holder .list-group-item');
-
-    if (_.isEmpty(value) || value === "") {
-        trackFiltered = trackSessionRows;
-        sessionFiltered = sessionSessionRows;
-    } else {
-        trackFiltered = _.filter($(trackSessionRows), function (session) {
-            return fuzzyMatch($(session).find('.title').text(), value);
-        });
-        sessionFiltered = _.filter($(sessionSessionRows), function (session) {
-            return fuzzyMatch($(session).find('.session-title').text(), value);
-        });
-    }
-
-    $(trackSessionRows).hide();
-    $(sessionSessionRows).hide();
-
-    if (trackFiltered.length === 0) {
-        $(".no-sessions-info").show();
-    } else {
-        $(".no-sessions-info").hide();
-        _.each(trackFiltered, function (session) {
-            $(session).show();
-        });
-    }
-
-    if (sessionFiltered.length === 0) {
-        $(".no-sessions-info").show();
-    } else {
-        $(".no-sessions-info").hide();
-        _.each(sessionFiltered, function (session) {
-            $(session).show();
-        });
-    }
 });
 
 /**
@@ -1204,12 +1158,10 @@ $(".export-png-button").click(function () {
 /**
  * Global document events for date change button, remove button and clear overlaps button
  */
-
 $(document)
     .on("click", ".date-change-btn", function () {
         $(this).addClass("active").siblings().removeClass("active");
         loadMicrolocationsToTimeline($(this).text());
-        $("#sessions-public-search").val("");
     })
     .on("click", ".session.scheduled > .remove-btn", function () {
         addSessionToUnscheduled($(this).parent());
@@ -1218,18 +1170,6 @@ $(document)
         try {
             $('.session.scheduled').not(this).popover('hide');
             $(this).popover('toggle');
-            if ($('.scheduler-pop').length !== 0) {
-                var scheduler_height = $('.scheduler-holder').height();
-                var popover_height = parseInt($('.popover').css('top')) + $('.popover').height();
-                if (popover_height > scheduler_height) {
-                    $('.scheduler-holder').height(scheduler_height + $('.popover').height());
-                } else {
-                    $('.scheduler-holder').height($('.timeline').height());
-                }
-                if ($('.popover').length === 0) {
-                    $('.scheduler-holder').height($('.timeline').height());
-                }
-            }
         } catch (ignored) { }
     })
     .on("click", ".session.scheduled > .edit-btn", function () {
@@ -1240,9 +1180,9 @@ $(document)
     .on("click", ".rooms-view", function(){
         $dayButtonsHolder.show();
         $timeline.removeClass('hidden');
+        $mobileTimeline.removeClass('hidden');
         $tracksTimeline.addClass('hidden');
         $sessionViewHolder.addClass('hidden');
-        $('#public-track-navbar').addClass('hidden');
         $(this).addClass("active").siblings().removeClass("active");
     })
     .on("click", ".tracks-view", function(){
@@ -1251,7 +1191,6 @@ $(document)
         $mobileTimeline.addClass('hidden');
         $tracksTimeline.removeClass('hidden');
         $sessionViewHolder.addClass('hidden');
-        $('#public-track-navbar').removeClass('hidden');
         $(this).addClass("active").siblings().removeClass("active");
     })
     .on("click", ".sessions-view", function() {
@@ -1260,7 +1199,6 @@ $(document)
         $timeline.addClass('hidden');
         $mobileTimeline.addClass('hidden');
         $tracksTimeline.addClass('hidden');
-        $('#public-track-navbar').addClass('hidden');
         $(this).addClass("active").siblings().removeClass("active");
 
     })

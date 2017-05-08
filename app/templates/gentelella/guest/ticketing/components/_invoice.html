@@ -4,13 +4,7 @@
             <div class="panel panel-default height">
                 <div class="panel-heading"><h3 class="panel-title">{{ _("Billing Details") }}</h3></div>
                 <div class="panel-body">
-                    <strong>
-                    {% if order.user.user_detail.fullname %}
-                    {{ order.user.user_detail.fullname }}
-                    {% else %}
-                    {{ order.user.email}}
-                    {% endif %}:
-                    </strong><br>
+                    <strong>{{ order.user.user_detail.fullname }}:</strong><br>
                     {{ order.address }}<br>
                     {{ order.city }}<br>
                     {{ order.state }}<br>

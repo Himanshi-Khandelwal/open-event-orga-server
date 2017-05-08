@@ -6,8 +6,8 @@ from app.models.notifications import Notification as NotificationModel
 from app.api.helpers import custom_fields as fields
 from app.api.helpers.helpers import (
     can_create,
-    requires_auth,
-    replace_event_id)
+    requires_auth
+)
 from app.api.helpers.utils import PAGINATED_MODEL, ServiceDAO, \
     POST_RESPONSES
 from app.api.helpers.utils import Resource
@@ -44,10 +44,9 @@ class NotificationDAO(ServiceDAO):
 DAO = NotificationDAO(NotificationModel, NOTIFICATION_POST)
 
 
-@api.route('/events/<string:event_id>/notifications')
+@api.route('/events/<int:event_id>/notifications')
 class UserNotifications(Resource):
     @requires_auth
-    @replace_event_id
     @can_create(DAO)
     @api.doc('create_user_notification', responses=POST_RESPONSES)
     @api.marshal_with(NOTIFICATION)

@@ -118,8 +118,7 @@ POST_SPONSOR_DATA = {
 POST_TRACK_DATA = {
     "description": "TestTrack",
     "name": "TestTrack",
-    "color": "#caf034",
-    "font_color": "#000000",
+    "color": "red",
     "track_image_url": "http://imgur.com/image.png",
     "location": "Some Street, Some City",
 }

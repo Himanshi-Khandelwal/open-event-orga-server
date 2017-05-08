@@ -6,8 +6,8 @@ from app.api.helpers.helpers import (
     can_create,
     can_update,
     can_delete,
-    requires_auth,
-    replace_event_id)
+    requires_auth
+)
 from app.api.helpers.utils import PAGINATED_MODEL, PaginatedResourceBase, ServiceDAO, \
     PAGE_PARAMS, POST_RESPONSES, PUT_RESPONSES, SERVICE_RESPONSES
 from app.api.helpers.utils import Resource, ETAG_HEADER_DEFN
@@ -24,7 +24,6 @@ TRACK = api.model('Track', {
     'name': fields.String(required=True),
     'description': fields.String(),
     'color': fields.Color(required=True),
-    'font_color': fields.Color(),
     'track_image_url': fields.Upload(),
     'location': fields.String(),
     'sessions': fields.List(fields.Nested(TRACK_SESSION)),
@@ -37,7 +36,6 @@ TRACK_PAGINATED = api.clone('TrackPaginated', PAGINATED_MODEL, {
 TRACK_POST = api.clone('TrackPost', TRACK)
 del TRACK_POST['id']
 del TRACK_POST['sessions']
-del TRACK_POST['font_color']
 
 
 # Create DAO
@@ -48,10 +46,9 @@ class TrackDAO(ServiceDAO):
 DAO = TrackDAO(TrackModel, TRACK_POST)
 
 
-@api.route('/events/<string:event_id>/tracks/<int:track_id>')
+@api.route('/events/<int:event_id>/tracks/<int:track_id>')
 @api.doc(responses=SERVICE_RESPONSES)
 class Track(Resource):
-    @replace_event_id
     @api.doc('get_track')
     @api.header(*ETAG_HEADER_DEFN)
     @api.marshal_with(TRACK)
@@ -60,7 +57,6 @@ class Track(Resource):
         return DAO.get(event_id, track_id)
 
     @requires_auth
-    @replace_event_id
     @can_delete(DAO)
     @api.doc('delete_track')
     @api.marshal_with(TRACK)
@@ -69,7 +65,6 @@ class Track(Resource):
         return DAO.delete(event_id, track_id)
 
     @requires_auth
-    @replace_event_id
     @can_update(DAO)
     @api.doc('update_track', responses=PUT_RESPONSES)
     @api.marshal_with(TRACK)
@@ -79,9 +74,8 @@ class Track(Resource):
         return DAO.update(event_id, track_id, self.api.payload)
 
 
-@api.route('/events/<string:event_id>/tracks')
+@api.route('/events/<int:event_id>/tracks')
 class TrackList(Resource):
-    @replace_event_id
     @api.doc('list_tracks')
     @api.header(*ETAG_HEADER_DEFN)
     @api.marshal_list_with(TRACK)
@@ -90,7 +84,6 @@ class TrackList(Resource):
         return DAO.list(event_id)
 
     @requires_auth
-    @replace_event_id
     @can_create(DAO)
     @api.doc('create_track', responses=POST_RESPONSES)
     @api.marshal_with(TRACK)
@@ -104,9 +97,8 @@ class TrackList(Resource):
         )
 
 
-@api.route('/events/<string:event_id>/tracks/page')
+@api.route('/events/<int:event_id>/tracks/page')
 class TrackListPaginated(Resource, PaginatedResourceBase):
-    @replace_event_id
     @api.doc('list_tracks_paginated', params=PAGE_PARAMS)
     @api.header(*ETAG_HEADER_DEFN)
     @api.marshal_with(TRACK_PAGINATED)

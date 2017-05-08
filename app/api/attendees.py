@@ -5,7 +5,7 @@ from app.helpers.ticketing import TicketingManager
 
 from app.api.helpers.helpers import (
     requires_auth,
-    can_access, replace_event_id)
+    can_access)
 from app.api.helpers.utils import POST_RESPONSES
 from app.api.helpers.utils import Resource
 from app.api.helpers import custom_fields as fields
@@ -23,10 +23,9 @@ ATTENDEE = api.model('TicketHolder', {
 })
 
 
-@api.route('/events/<string:event_id>/attendees/')
+@api.route('/events/<int:event_id>/attendees/')
 class AttendeesList(Resource):
     @requires_auth
-    @replace_event_id
     @can_access
     @api.doc('check_in_toggle', responses=POST_RESPONSES)
     @api.marshal_list_with(ATTENDEE)
@@ -35,10 +34,9 @@ class AttendeesList(Resource):
         return TicketingManager.get_attendees(event_id)
 
 
-@api.route('/events/<string:event_id>/attendees/check_in_toggle/<holder_identifier>')
+@api.route('/events/<int:event_id>/attendees/check_in_toggle/<holder_identifier>')
 class AttendeeCheckInToggle(Resource):
     @requires_auth
-    @replace_event_id
     @can_access
     @api.doc('check_in_toggle', responses=POST_RESPONSES)
     @api.marshal_with(ATTENDEE)
@@ -48,10 +46,9 @@ class AttendeeCheckInToggle(Resource):
         return holder, 200
 
 
-@api.route('/events/<string:event_id>/attendees/check_in_toggle/<holder_identifier>/check_in')
+@api.route('/events/<int:event_id>/attendees/check_in_toggle/<holder_identifier>/check_in')
 class AttendeeCheckIn(Resource):
     @requires_auth
-    @replace_event_id
     @can_access
     @api.doc('check_in_toggle', responses=POST_RESPONSES)
     @api.marshal_with(ATTENDEE)
@@ -61,10 +58,9 @@ class AttendeeCheckIn(Resource):
         return holder, 200
 
 
-@api.route('/events/<string:event_id>/attendees/check_in_toggle/<holder_identifier>/check_out')
+@api.route('/events/<int:event_id>/attendees/check_in_toggle/<holder_identifier>/check_out')
 class AttendeeCheckOut(Resource):
     @requires_auth
-    @replace_event_id
     @can_access
     @api.doc('check_in_toggle', responses=POST_RESPONSES)
     @api.marshal_with(ATTENDEE)
