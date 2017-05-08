@@ -92,10 +92,7 @@ def get_event_json(event_id):
         else:
             result["social_links"].append(social_link.serialize)
 
-    sorted_tickets = sorted(event.tickets, key=lambda x: x.position)
-    for index, ticket in enumerate(sorted_tickets):
-        if not ticket.position:
-            ticket.position = index + 1
+    for ticket in event.tickets:
         result["tickets"].append(ticket.serialize)
 
     if event.stripe:
@@ -320,7 +317,6 @@ def save_tickets(tickets_data, event):
 
         ticket.name = ticket_data['name']
         ticket.quantity = ticket_data['quantity'] if ticket_data['quantity'] != '' else 100
-        ticket.position = ticket_data['position']
         ticket.type = ticket_data['type']
         ticket.description_toggle = ticket_data['description_visibility']
         ticket.description = ticket_data['description']

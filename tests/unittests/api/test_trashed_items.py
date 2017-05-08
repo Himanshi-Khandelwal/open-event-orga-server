@@ -1,5 +1,4 @@
 import unittest
-from datetime import datetime
 
 from app import current_app as app
 from app.helpers.data import save_to_db
@@ -39,7 +38,7 @@ class TestTrashedItems404(OpenEventTestCase):
         # delete virtually
         with app.test_request_context():
             item = model.query.get(1)
-            item.deleted_at = datetime.now()
+            item.in_trash = True
             save_to_db(item)
         # get item
         resp = self.app.get(path)

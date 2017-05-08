@@ -30,7 +30,7 @@ def get_published_event_or_abort(identifier):
 
             abort(404)
 
-    if event.deleted_at:
+    if event.in_trash:
         abort(404)
     return event
 
@@ -71,9 +71,7 @@ def display_event_detail_home(identifier):
     timenow_event_tz = datetime.now(pytz.timezone(event.timezone
                                                   if (event.timezone and event.timezone != '') else 'UTC'))
     module = DataGetter.get_module()
-    tickets = DataGetter.get_sales_open_tickets(event.id, event.timezone
-                                                  if (event.timezone and event.timezone != '') else 'UTC')
-    sorted_tickets = sorted(tickets, key=lambda x: x['ticket'].position)
+    tickets = DataGetter.get_sales_open_tickets(event.id, True)
 
     '''Sponsor Levels'''
     sponsors = {-1: []}
@@ -100,7 +98,7 @@ def display_event_detail_home(identifier):
                            module=module,
                            timenow_event_tz=timenow_event_tz,
                            current_timezone=get_current_timezone(),
-                           tickets=sorted_tickets if sorted_tickets else [],
+                           tickets=tickets if tickets else [],
                            fees=fees,
                            code=code)
 
@@ -120,13 +118,10 @@ def display_event_sessions(identifier):
     call_for_speakers = DataGetter.get_call_for_papers(event.id).first()
     accepted_session_count = get_count(DataGetter.get_sessions(event.id))
     tracks = DataGetter.get_tracks(event.id)
-    return render_template('gentelella/guest/event/sessions.html',
-                           event=event,
-                           placeholder_images=placeholder_images,
-                           tracks=tracks,
+    return render_template('gentelella/guest/event/sessions.html', event=event,
+                           placeholder_images=placeholder_images, tracks=tracks,
                            accepted_sessions_count=accepted_session_count,
-                           call_for_speakers=call_for_speakers,
-                           custom_placeholder=custom_placeholder)
+                           call_for_speakers=call_for_speakers, custom_placeholder=custom_placeholder)
 
 
 @event_detail.route('/<identifier>/schedule/')
@@ -143,16 +138,12 @@ def display_event_schedule(identifier):
         abort(404)
     tracks = DataGetter.get_tracks(event.id)
     accepted_sessions_count = get_count(DataGetter.get_sessions(event.id))
-    call_for_speakers = DataGetter.get_call_for_papers(event.id).first()
     if accepted_sessions_count == 0 or not event.schedule_published_on:
         abort(404)
-    return render_template('gentelella/guest/event/schedule.html',
-                           event=event,
+    return render_template('gentelella/guest/event/schedule.html', event=event,
                            placeholder_images=placeholder_images,
                            accepted_sessions_count=accepted_sessions_count,
-                           call_for_speakers=call_for_speakers,
-                           tracks=tracks,
-                           custom_placeholder=custom_placeholder)
+                           tracks=tracks, custom_placeholder=custom_placeholder)
 
 
 @event_detail.route('/<identifier>/schedule/pentabarf.xml')
@@ -206,7 +197,7 @@ def display_event_cfs(identifier, via_hash=False):
         for speaker in user_speaker:
             current_session = []
             for session in speaker.sessions:
-                if session.event_id == event.id and not session.deleted_at:
+                if session.event_id == event.id and not session.in_trash:
                     if session.title:
                         current_session.append(session)
             if current_session:

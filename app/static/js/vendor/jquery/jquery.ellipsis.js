@@ -30,10 +30,10 @@
 
       while (text.length > 0 && func()) {
           text = text.substr(0, text.length - 1);
-          t.find(".text").text(text + "...");
+          t.text(text + "...");
       }
 
-      el.find(".text").text(t.find(".text").text());
+      el.find(".text").text(t.text());
       t.remove();
 
       return el;

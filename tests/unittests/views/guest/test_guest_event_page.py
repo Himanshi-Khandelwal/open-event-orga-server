@@ -51,7 +51,7 @@ class TestGuestEventPage(OpenEventTestCase):
         with app.test_request_context():
             event = ObjectMother.get_event()
             event.state = 'Published'
-            event.deleted_at = datetime.now()
+            event.in_trash = True
             save_to_db(event, "Event Saved")
             rv = self.app.get(url_for('event_detail.display_event_detail_home', identifier=event.identifier),
                               follow_redirects=True)

@@ -35,7 +35,7 @@ class XCalExporter:
         sessions = Session.query \
             .filter_by(event_id=event_id) \
             .filter_by(state='accepted') \
-            .filter(Session.deleted_at.is_(None)) \
+            .filter(Session.in_trash is not True) \
             .order_by(asc(Session.start_time)).all()
 
         for session in sessions:

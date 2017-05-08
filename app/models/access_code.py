@@ -49,11 +49,6 @@ class AccessCode(db.Model):
         self.is_active = is_active
         self.created_at = datetime.utcnow()
         self.used_for = used_for
-
-    @staticmethod
-    def get_service_name():
-        return 'access_code'
-
     def __repr__(self):
         return '<AccessCode %r>' % self.id
 
