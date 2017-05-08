@@ -81,12 +81,14 @@ def process_session_view(session_id):
             return redirect(url_for('.display_my_sessions_view', event_id=session.event_id))
         session_form = json.loads(form_elems.session_form)
         event = DataGetter.get_event(session.event_id)
+        speakers = DataGetter.get_speakers(session.event_id).all()
         return render_template(
             'gentelella/users/mysessions/mysession_session_edit.html',
             session=session,
             speaker=speaker,
             session_form=session_form,
-            event=event)
+            event=event,
+            speakers=speakers)
 
     if request.method == 'POST':
         session = DataGetter.get_sessions_of_user_by_id(session_id)
@@ -143,8 +145,7 @@ def avatar_delete(event_id, speaker_id):
 @my_sessions.route('/<int:session_id>/withdraw/')
 def withdraw_session_view(session_id):
     session = DataGetter.get_sessions_of_user_by_id(session_id)
-    session.in_trash = True
-    session.trash_date = datetime.now()
+    session.deleted_at = datetime.now()
     save_to_db(session)
     flash("The session has been withdrawn", "success")
     return redirect(url_for('.display_my_sessions_view', session_id=session_id))

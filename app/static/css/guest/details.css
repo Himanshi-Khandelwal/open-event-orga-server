@@ -22,6 +22,11 @@ body {
   text-align: left;
 }
 
+/* custom modal properties */
+.modal-content {
+  border-radius: 0;
+}
+
 /*noinspection CssOptimizeSimilarProperties,CssUnknownTarget*/
 .carousel .item {
   background-position: center;
@@ -81,7 +86,7 @@ body {
   color: #5d5d5d;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
 
   .event-info-container-holder {
     margin-left: 70px;

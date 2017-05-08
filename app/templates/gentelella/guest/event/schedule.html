@@ -32,16 +32,33 @@
 
                     </div>
                     <div id="type-change-btn-holder" class="btn-group pull-right" role="group">
+                        <div class="input-group" style="margin: 0px; width: 15vw;">
+                            <span class="input-group-addon" id="search-public-addon"><i
+                                            class="glyphicon glyphicon-search"></i></span>
+                            <input type="search" class="form-control" id="sessions-public-search"
+                                   placeholder="Search sessions ..."
+                                   aria-describedby="search-public-addon">
+                        </div>
                         <button type="button" class="btn btn-default rooms-view">{{ _("Rooms View") }}</button>
                         <button type="button" class="btn btn-default tracks-view">{{ _("Tracks View") }}</button>
                         <button type="button" class="btn btn-default sessions-view">{{ _("Sessions View") }}</button>
                         <button type="button" class="btn btn-default export-png"><i class="fa fa-download"></i></button>
-
+                        <button type="button" class="btn btn-default pop-out"><i class="fa fa-expand btn-pop-out"></i></button>
                     </div>
-                    <span class="fa fa-expand btn-pop-out"></span>
                 </div>
 
                 <div class="scheduler-body">
+                    <nav id="public-track-navbar" class="navbar navbar-default track-navbar hidden" style="margin-top: 25px;">
+                        <div class="container-fluid track-container-fluid">
+                            <div class="navbar-collapse track-navbar-collapse" id="bs-example-navbar-collapse-1">
+                                <ul class="nav navbar-nav" style="max-width: 100%">
+                                    {% for track in tracks %}
+                                        <li class="track-link"><i class="fa fa-circle" aria-hidden="true"></i><a href="#track-id-{{ track.id }}">{{ track.name }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </nav>
                     <div class="flash-message-holder" style="width: 100%; text-align: center;">
                         <span class="text-muted message loading-text"
                               style="font-weight: 300; font-size: 30px;">{{ _("Sessions loading") }} ...</span>
@@ -134,18 +151,17 @@
                     $('.overlay').addClass('visible');
                     $('.btn-pop-out').removeClass('fa-expand').addClass('fa-compress');
                     var width = $("#timeline").width() - $('.timeunits.x1').width();
-                    console.log($("#timeline").width());
-                    console.log($('.timeunits.x1').width());
-                    console.log(width);
                     $('.microlocation-container').css("width", width + "px");
+                    $('.session.scheduled').popover('hide');
                 }
                 function close(){
                     $scheduler.removeClass('scheduler-pop');
                     $body.removeClass('noscroll');
                     $('.overlay').removeClass('visible');
                     $('.btn-pop-out').addClass('fa-expand').removeClass('fa-compress');
-                    var width = $("#timeline").width() - $('.timeunits.x1').width();
-                    $('.microlocation-container').css("width", width + "px");
+                    $('.microlocation-container').css("width", "fit-content");
+                    $('.session.scheduled').popover('hide');
+                    $('.scheduler-holder').height($('.timeline').height());
                 }
                 if(force == null) {
                     state ? close() : open();
@@ -161,7 +177,7 @@
 
         var toggleSchedule = toggleScheduleBox();
 
-        $('.btn-pop-out').on('click touchstart', function() {
+        $('.btn.pop-out').on('click touchstart', function() {
             toggleSchedule();
         });
 
